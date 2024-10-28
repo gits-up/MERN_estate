@@ -1,4 +1,16 @@
 import express from "express"; //type set as module in package.json so used import instead of require
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+
+dotenv.config();
+mongoose
+  .connect(process.env.MONGO) //personal note: check cloudflare for connecting
+  .then(() => {
+    console.log("DB connected");
+  })
+  .catch((err) => {
+    console.log(err);
+  });
 
 const app = express();
 
