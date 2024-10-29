@@ -5,3 +5,6 @@
 body{
     background-color: rgb(241, 245, 241);
 }
+* {
+    scrollbar-color: #334155 #F1F5F1;
+  }
