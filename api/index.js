@@ -6,7 +6,7 @@ import authRouter from "./routes/auth.route.js";
 
 dotenv.config();
 mongoose
-  .connect(process.env.MONGO) //personal note: check cloudflare for connecting
+  .connect(process.env.MONGO) //personal note: check cloudflare for connecting (or any vpn, etc)
   .then(() => {
     console.log("DB connected");
   })
@@ -24,6 +24,7 @@ app.listen(3000, () => {
 app.use("/api/user", userRouter);
 app.use("/api/auth", authRouter);
 
+//middleware to handle errors
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || "Internal Server Error";
