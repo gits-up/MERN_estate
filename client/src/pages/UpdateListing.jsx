@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   getDownloadURL,
   getStorage,
@@ -7,11 +7,12 @@ import {
 } from "firebase/storage";
 import { app } from "../firebase";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-export default function CreateListing() {
+export default function UpdateListing() {
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
+  const params = useParams();
   const [files, setFiles] = useState([]);
   const [formData, setFormData] = useState({
     imageUrls: [],
@@ -31,6 +32,19 @@ export default function CreateListing() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const fetchListing = async () => {
+      const listingId = params.listingId;
+      const res = await fetch(`/api/listing/get/${listingId}`);
+      const data = await res.json();
+      if (data.success === false) {
+        console.log(data.message);
+        return;
+      }
+      setFormData(data);
+    };
+    fetchListing();
+  }, []);
   const handleImageSubmit = (e) => {
     if (files.length > 0 && files.length + formData.imageUrls.length < 7) {
       setUploading(true);
@@ -49,13 +63,11 @@ export default function CreateListing() {
           setUploading(false);
         })
         .catch((err) => {
-          setImageUploadError("Image upload failed (2MB max per image)");
+          setImageUploadError("Image upload failed (2 mb max per image)");
           setUploading(false);
         });
     } else {
-      setImageUploadError(
-        "You must upload atleast 1 and up to 6 images per listing"
-      );
+      setImageUploadError("You can only upload 6 images per listing");
       setUploading(false);
     }
   };
@@ -89,7 +101,6 @@ export default function CreateListing() {
       imageUrls: formData.imageUrls.filter((_, i) => i !== index),
     });
   };
-
   const handleChange = (e) => {
     if (e.target.id === "sale" || e.target.id === "rent") {
       setFormData({
@@ -118,7 +129,6 @@ export default function CreateListing() {
       });
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -128,7 +138,7 @@ export default function CreateListing() {
         return setError("Discount price must be lower than regular price");
       setLoading(true);
       setError(false);
-      const res = await fetch("/api/listing/create", {
+      const res = await fetch(`/api/listing/update/${params.listingId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -152,7 +162,7 @@ export default function CreateListing() {
   return (
     <main className="p-3 max-w-4xl mx-auto">
       <h1 className="text-3xl font-semibold text-center my-7">
-        Create Listing
+        Update a Listing
       </h1>
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
         <div className="flex flex-col gap-4 flex-1">
@@ -214,7 +224,7 @@ export default function CreateListing() {
                 onChange={handleChange}
                 checked={formData.parking}
               />
-              <span>Parking</span>
+              <span>Parking spot</span>
             </div>
             <div className="flex gap-2">
               <input
@@ -244,12 +254,12 @@ export default function CreateListing() {
                 id="bedrooms"
                 min="1"
                 max="10"
-                className="p-3 border border-gray-300 rounded-lg"
                 required
+                className="p-3 border border-gray-300 rounded-lg"
                 onChange={handleChange}
-                checked={formData.bedrooms}
+                value={formData.bedrooms}
               />
-              <p>Bedrooms</p>
+              <p>Beds</p>
             </div>
             <div className="flex items-center gap-2">
               <input
@@ -257,24 +267,24 @@ export default function CreateListing() {
                 id="bathrooms"
                 min="1"
                 max="10"
-                className="p-3 border border-gray-300 rounded-lg"
                 required
+                className="p-3 border border-gray-300 rounded-lg"
                 onChange={handleChange}
-                checked={formData.bathrooms}
+                value={formData.bathrooms}
               />
-              <p>Bathrooms</p>
+              <p>Baths</p>
             </div>
             <div className="flex items-center gap-2">
               <input
                 type="number"
                 id="regularPrice"
-                className="p-3 border border-gray-300 rounded-lg"
                 required
+                className="p-3 border border-gray-300 rounded-lg"
                 onChange={handleChange}
-                checked={formData.regularPrice}
+                value={formData.regularPrice}
               />
               <div className="flex flex-col items-center">
-                <p>Regular Price</p>
+                <p>Regular price</p>
                 <span className="text-xs">(per month)</span>
               </div>
             </div>
@@ -299,7 +309,7 @@ export default function CreateListing() {
         <div className="flex flex-col flex-1 gap-4">
           <p className="font-semibold">
             Images:
-            <span className="text-normal text-gray-600 ml-2">
+            <span className="font-normal text-gray-600 ml-2">
               The first image will be the cover (max 6)
             </span>
           </p>
@@ -328,7 +338,7 @@ export default function CreateListing() {
             formData.imageUrls.map((url, index) => (
               <div
                 key={url}
-                className="flex justify-between p-3 border items-center rounded-lg"
+                className="flex justify-between p-3 border items-center"
               >
                 <img
                   src={url}
@@ -348,7 +358,7 @@ export default function CreateListing() {
             disabled={loading || uploading}
             className="p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80"
           >
-            {loading ? "Creating..." : "Create listing"}
+            {loading ? "Creating..." : "Update listing"}
           </button>
           {error && <p className="text-red-700 text-sm">{error}</p>}
         </div>
